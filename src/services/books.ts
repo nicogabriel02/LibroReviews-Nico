@@ -1,3 +1,4 @@
+// src/services/books.ts
 export type BookItem = {
   id: string;
   title: string;
@@ -18,7 +19,13 @@ type GBookItem = { id: string; volumeInfo?: GVolumeInfo };
 export async function searchBooksService(q: string): Promise<BookItem[]> {
   if (!q.trim()) return [];
   const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=20`;
-  const resp = await fetch(url);
+
+  const resp = await fetch(url, {
+    // evita cache roto en prod y errores de prerender
+    cache: "no-store",
+    // o next: { revalidate: 3600 } si querés cachear en el servidor
+  });
+
   if (!resp.ok) return [];
   const data = (await resp.json()) as { items?: GBookItem[] };
   return (data.items ?? []).map((it) => {
