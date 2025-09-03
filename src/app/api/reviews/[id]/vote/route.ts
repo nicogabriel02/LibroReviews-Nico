@@ -3,13 +3,12 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { voteReviewService } from "@/services/reviews";
 
-// Aseguramos runtime Node (Prisma no funciona en Edge)
+// Prisma necesita Node runtime (no Edge)
 export const runtime = "nodejs";
 
-type Ctx = { params: { id: string } };
-
-export async function POST(request: Request, context: Ctx) {
-  const { id } = context.params;
+// 👇 params es Promise<{ id: string }>
+export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params; // 👈 clave
 
   // cuerpo esperado: { value: "up" | "down" }
   const body = (await request.json().catch(() => null)) as { value?: "up" | "down" } | null;
@@ -17,7 +16,7 @@ export async function POST(request: Request, context: Ctx) {
     return NextResponse.json({ error: "invalid vote" }, { status: 400 });
   }
 
-  const jar = await cookies();
+  const jar = await cookies(); // cookies también es async en Next 15
   const sid = jar.get("sid")?.value ?? "anon";
 
   const result = await voteReviewService(id, sid, body.value);
