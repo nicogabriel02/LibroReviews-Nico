@@ -1,38 +1,25 @@
-// app/api/reviews/[id]/vote/route.ts
-import { NextRequest, NextResponse } from "next/server";
+// src/app/api/reviews/[id]/vote/route.ts
+import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { prisma } from "@/lib/prisma";
-import { z } from "zod";
+import { voteReviewService } from "@/services/reviews";
 
-const VoteSchema = z.object({ value: z.enum(["up", "down"]) });
+// Aseguramos runtime Node (Prisma no funciona en Edge)
+export const runtime = "nodejs";
 
-export async function POST(req: NextRequest, { params }: { params: { id: string } }) {
-  const { id } = params; // reviewId
-  const sid = cookies().get("sid")?.value ?? "";
-  if (!sid) return NextResponse.json({ error: "No session" }, { status: 400 });
+type Ctx = { params: { id: string } };
 
-  const body = await req.json();
-  const parsed = VoteSchema.safeParse(body);
-  if (!parsed.success) return NextResponse.json({ error: "Bad vote" }, { status: 400 });
+export async function POST(request: Request, context: Ctx) {
+  const { id } = context.params;
 
-  const newValue = parsed.data.value === "up" ? 1 : -1;
-
-  const existing = await prisma.reviewVote.findUnique({
-    where: { reviewId_sessionId: { reviewId: id, sessionId: sid } },
-  });
-
-  if (existing && existing.value === newValue) {
-    await prisma.reviewVote.delete({ where: { id: existing.id } }); // toggle off
-  } else if (existing) {
-    await prisma.reviewVote.update({ where: { id: existing.id }, data: { value: newValue } });
-  } else {
-    await prisma.reviewVote.create({ data: { reviewId: id, sessionId: sid, value: newValue } });
+  // cuerpo esperado: { value: "up" | "down" }
+  const body = (await request.json().catch(() => null)) as { value?: "up" | "down" } | null;
+  if (!body?.value || (body.value !== "up" && body.value !== "down")) {
+    return NextResponse.json({ error: "invalid vote" }, { status: 400 });
   }
 
-  // Devolver score actualizado
-  const votes = await prisma.reviewVote.findMany({ where: { reviewId: id } });
-  const score = votes.reduce((acc, v) => acc + v.value, 0);
-  const myVote = votes.find((v) => v.sessionId === sid)?.value ?? 0;
+  const jar = await cookies();
+  const sid = jar.get("sid")?.value ?? "anon";
 
-  return NextResponse.json({ ok: true, score, myVote });
+  const result = await voteReviewService(id, sid, body.value);
+  return NextResponse.json(result);
 }
