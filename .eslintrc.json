@@ -1,9 +1,4 @@
 {
   "root": true,
-  "extends": ["next/core-web-vitals", "plugin:@typescript-eslint/recommended"],
-  "ignorePatterns": [
-    "**/*.test.ts",
-    "**/*.test.tsx",
-    "vitest.setup.tsx"
-  ]
+  "extends": ["next/core-web-vitals", "plugin:@typescript-eslint/recommended"]
 }
