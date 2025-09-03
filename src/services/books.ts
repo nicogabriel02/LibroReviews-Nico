@@ -1,12 +1,27 @@
-export type BookItem = { id: string; title: string; authors: string[]; thumbnail?: string; publishedDate?: string };
+export type BookItem = {
+  id: string;
+  title: string;
+  authors: string[];
+  thumbnail?: string;
+  publishedDate?: string;
+};
+
+type GImageLinks = { thumbnail?: string; smallThumbnail?: string };
+type GVolumeInfo = {
+  title?: string;
+  authors?: string[];
+  imageLinks?: GImageLinks;
+  publishedDate?: string;
+};
+type GBookItem = { id: string; volumeInfo?: GVolumeInfo };
 
 export async function searchBooksService(q: string): Promise<BookItem[]> {
   if (!q.trim()) return [];
   const url = `https://www.googleapis.com/books/v1/volumes?q=${encodeURIComponent(q)}&maxResults=20`;
   const resp = await fetch(url);
   if (!resp.ok) return [];
-  const data = await resp.json();
-  return (data.items ?? []).map((it: any) => {
+  const data = (await resp.json()) as { items?: GBookItem[] };
+  return (data.items ?? []).map((it) => {
     const v = it.volumeInfo ?? {};
     return {
       id: it.id,
