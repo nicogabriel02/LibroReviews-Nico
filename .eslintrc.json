@@ -1,11 +1,9 @@
 {
+  "root": true,
   "extends": ["next/core-web-vitals", "plugin:@typescript-eslint/recommended"],
-  "overrides": [
-    {
-      "files": ["**/*.test.ts", "**/*.test.tsx", "vitest.setup.tsx"],
-      "rules": {
-        "@typescript-eslint/no-explicit-any": "off"
-      }
-    }
+  "ignorePatterns": [
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "vitest.setup.tsx"
   ]
 }
