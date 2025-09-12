@@ -5,6 +5,8 @@ services:
       POSTGRES_USER: libro
       POSTGRES_PASSWORD: libro
       POSTGRES_DB: libro
+      MONGODB_URI: "mongodb+srv://USUARIO:PASSWORD@CLUSTER.mongodb.net/?retryWrites=true&w=majority&appName=TU-APP"
+      JWT_SECRET: "4b7f28185338a57acaf9283c64a76895b9d7da5736fb424e43d47090e7a5d2715dae89a48bb5885438f536c07431c649bb5d542d32dab8fc801843cca2660367"
     ports:
       - "5433:5432"   
     volumes:

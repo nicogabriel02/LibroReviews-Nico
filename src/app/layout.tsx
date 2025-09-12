@@ -1,20 +1,21 @@
-// app/layout.tsx
-import "./globals.css";
 import type { Metadata } from "next";
+import { getCurrentUser } from "@/lib/auth";
+import HeaderAuthClient from "./HeaderAuthClient";
 
-export const metadata: Metadata = {
-  title: "Reseñas de Libros",
-  description: "Busca libros, reseñas y votaciones comunitarias",
-};
+export const metadata: Metadata = { title: "Libro Reviews" };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const me = await getCurrentUser();
   return (
     <html lang="es">
-      <body style={{ margin: 0, fontFamily: "system-ui, sans-serif" }}>
-        <div style={{ maxWidth: 960, margin: "0 auto", padding: 16 }}>
-          <h1 style={{ fontSize: 28, margin: "12px 0" }}>📚 Reseñas de Libros</h1>
-          {children}
-        </div>
+      <body style={{ fontFamily: "system-ui, sans-serif" }}>
+        <header style={{ display: "flex", gap: 12, padding: 12, borderBottom: "1px solid #eee" }}>
+          <a href="/">Inicio</a>
+          <div style={{ marginLeft: "auto" }}>
+            <HeaderAuthClient user={me ? { email: me.email, name: me.name } : null} />
+          </div>
+        </header>
+        {children}
       </body>
     </html>
   );

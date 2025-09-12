@@ -1,36 +1,29 @@
-// src/app/api/reviews/route.ts
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { CreateReview as CreateReviewSchema } from "@/lib/validation";
-import { listReviewsService, createReviewService } from "@/services/reviews";
+import { CreateReviewSchema, UpdateReviewSchema } from "@/lib/validation";
+import { getCurrentUser, requireUser } from "@/lib/auth";
+import { listReviewsByBook, createReview } from "@/services/reviews.mongo";
 
-// Prisma necesita Node runtime
 export const runtime = "nodejs";
 
 // GET /api/reviews?bookId=...
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const bookId = searchParams.get("bookId") ?? "";
-  if (!bookId) {
-    return NextResponse.json({ error: "bookId requerido" }, { status: 400 });
-  }
+  if (!bookId) return NextResponse.json({ error: "bookId requerido" }, { status: 400 });
 
-  const jar = await cookies(); // Next 15: async
-  const sid = jar.get("sid")?.value ?? "anon";
-
-  const reviews = await listReviewsService(bookId, sid);
+  const me = await getCurrentUser();
+  const reviews = await listReviewsByBook(bookId, me?.id);
   return NextResponse.json({ reviews });
 }
 
 // POST /api/reviews
-// body: { bookId, authorName, rating, content }
 export async function POST(req: Request) {
+  const me = await requireUser();
   const body = await req.json().catch(() => null);
   const parsed = CreateReviewSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: "invalid body", issues: parsed.error.issues }, { status: 400 });
-  }
+  if (!parsed.success) return NextResponse.json({ error: "invalid" }, { status: 400 });
 
-  const id = await createReviewService(parsed.data);
-  return NextResponse.json({ ok: true, id });
+  const { bookId, rating, content } = parsed.data;
+  const id = await createReview(me.id, bookId, rating, content);
+  return NextResponse.json({ ok: true, id }, { status: 201 });
 }
