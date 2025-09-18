@@ -9,7 +9,7 @@ export async function signUserJWT(payload: JWTPayload, expSeconds = 60 * 60 * 24
   return await new SignJWT(payload)
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
-    .setExpirationTime(expSeconds)
+    .setExpirationTime(Math.floor(Date.now() / 1000) + expSeconds)
     .sign(secret);
 }
 

@@ -15,11 +15,17 @@ export async function POST(req: Request) {
     const u = await registerUser(email, password, name);
     const token = await signUserJWT({ sub: u.id, email: u.email, name: u.name });
     const res = NextResponse.json({ ok: true, user: u });
-    res.cookies.set(getAuthCookieName(), token, { httpOnly: true, secure: true, sameSite: "lax", path: "/" });
+    res.cookies.set(getAuthCookieName(), token, { 
+      httpOnly: true, 
+      secure: process.env.NODE_ENV === "production", 
+      sameSite: "lax", 
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7 // 7 días en segundos
+    });
     return res;
   } catch (e: any) {
     if (String(e.message).includes("EMAIL_TAKEN")) {
-      return NextResponse.json({ error: "email_taken" }, { status: 409 });
+      return NextResponse.json({ error: "EMAIL_TAKEN" }, { status: 409 });
     }
     return NextResponse.json({ error: "server_error" }, { status: 500 });
   }

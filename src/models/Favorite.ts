@@ -7,6 +7,12 @@ const FavoriteSchema = new Schema({
 
 FavoriteSchema.index({ userId: 1, bookId: 1 }, { unique: true });
 
-export type TFavorite = { _id: string; userId: string; bookId: string };
+export type TFavorite = { 
+  _id: string; 
+  userId: string; 
+  bookId: string; 
+  createdAt: Date;
+  updatedAt: Date;
+};
 
 export const Favorite = models.Favorite || model("Favorite", FavoriteSchema);

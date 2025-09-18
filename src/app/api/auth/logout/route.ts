@@ -5,6 +5,12 @@ export const runtime = "nodejs";
 
 export async function POST() {
   const res = NextResponse.json({ ok: true });
-  res.cookies.set(getAuthCookieName(), "", { httpOnly: true, secure: true, expires: new Date(0), path: "/" });
+  res.cookies.set(getAuthCookieName(), "", { 
+    httpOnly: true, 
+    secure: process.env.NODE_ENV === "production", 
+    expires: new Date(0), 
+    path: "/",
+    sameSite: "lax"
+  });
   return res;
 }

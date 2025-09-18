@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { UpdateReviewSchema } from "@/lib/validation";
 import { requireUser } from "@/lib/auth";
-import { updateReview, deleteReview } from "@/services/reviews.mongo";
+import { updateReview, deleteReview } from "@/services/reviews";
 
 export const runtime = "nodejs";
 

@@ -15,7 +15,13 @@ export async function POST(req: Request) {
     const u = await loginUser(email, password);
     const token = await signUserJWT({ sub: u.id, email: u.email, name: u.name });
     const res = NextResponse.json({ ok: true, user: u });
-    res.cookies.set(getAuthCookieName(), token, { httpOnly: true, secure: true, sameSite: "lax", path: "/" });
+    res.cookies.set(getAuthCookieName(), token, { 
+      httpOnly: true, 
+      secure: process.env.NODE_ENV === "production", 
+      sameSite: "lax", 
+      path: "/",
+      maxAge: 60 * 60 * 24 * 7 // 7 días en segundos
+    });
     return res;
   } catch {
     return NextResponse.json({ error: "invalid_credentials" }, { status: 401 });

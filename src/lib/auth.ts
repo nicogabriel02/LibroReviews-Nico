@@ -12,7 +12,11 @@ export async function getCurrentUser() {
     await connectMongo();
     const user = await User.findById(payload.sub).lean();
     if (!user) return null;
-    return { id: String(user._id), email: user.email, name: user.name };
+    return { 
+      id: String((user as any)._id), 
+      email: (user as any).email, 
+      name: (user as any).name 
+    };
   } catch {
     return null;
   }

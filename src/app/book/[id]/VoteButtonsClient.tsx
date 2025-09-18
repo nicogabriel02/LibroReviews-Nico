@@ -33,12 +33,12 @@ export default function VoteButtonsClient({
     try {
       // optimista simple:
       const target = dir === "up" ? 1 : -1;
-      let nextMy = target as -1 | 1;
+      let nextMy: -1 | 0 | 1 = target as -1 | 1;
       let delta = target;
 
       if (myVote === target) {
         // mismo voto -> quitar
-        nextMy = 0 as 0;
+        nextMy = 0;
         delta = -target;
       } else if (myVote === -target) {
         // cambio de voto -> +/- 2
@@ -75,25 +75,45 @@ export default function VoteButtonsClient({
   }
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+    <div className="flex items-center space-x-2">
       <button
         type="button"
         onClick={() => vote("up")}
-        disabled={loading}
-        style={{ color: myVote === 1 ? "green" : undefined }}
+        disabled={loading || disabled}
+        className={`p-2 rounded-lg transition-colors ${
+          myVote === 1
+            ? "bg-green-100 text-green-600"
+            : "text-gray-400 hover:text-green-600 hover:bg-green-50"
+        } ${loading || disabled ? "cursor-not-allowed opacity-50" : ""}`}
+        title={disabled ? "Inicia sesión para votar" : "Votar positivo"}
         aria-label="Votar positivo"
       >
-        ▲
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M3.293 9.707a1 1 0 010-1.414l6-6a1 1 0 011.414 0l6 6a1 1 0 01-1.414 1.414L10 4.414 4.707 9.707a1 1 0 01-1.414 0z" clipRule="evenodd" />
+        </svg>
       </button>
-      <strong>{score}</strong>
+      
+      <span className={`min-w-[2rem] text-center font-medium ${
+        score > 0 ? "text-green-600" : score < 0 ? "text-red-600" : "text-gray-500"
+      }`}>
+        {score}
+      </span>
+      
       <button
         type="button"
         onClick={() => vote("down")}
-        disabled={loading}
-        style={{ color: myVote === -1 ? "crimson" : undefined }}
+        disabled={loading || disabled}
+        className={`p-2 rounded-lg transition-colors ${
+          myVote === -1
+            ? "bg-red-100 text-red-600"
+            : "text-gray-400 hover:text-red-600 hover:bg-red-50"
+        } ${loading || disabled ? "cursor-not-allowed opacity-50" : ""}`}
+        title={disabled ? "Inicia sesión para votar" : "Votar negativo"}
         aria-label="Votar negativo"
       >
-        ▼
+        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+          <path fillRule="evenodd" d="M16.707 10.293a1 1 0 010 1.414l-6 6a1 1 0 01-1.414 0l-6-6a1 1 0 111.414-1.414L10 15.586l5.293-5.293a1 1 0 011.414 0z" clipRule="evenodd" />
+        </svg>
       </button>
     </div>
   );

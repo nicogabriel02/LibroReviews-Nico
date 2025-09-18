@@ -1,5 +1,7 @@
 // src/app/book/[id]/page.tsx
 import Reviews from "./reviews";
+import FavoriteButtonClient from "./FavoriteButtonClient";
+import { getCurrentUser } from "@/lib/auth";
 import Link from "next/link";
 
 async function getBook(id: string) {
@@ -25,41 +27,109 @@ async function getBook(id: string) {
 export default async function BookPage({
   params,
 }: {
-  params: Promise<{ id: string }>; // 👈 params es Promise en Next 15
+  params: Promise<{ id: string }>; 
 }) {
-  const { id } = await params;     // 👈 await
+  const { id } = await params;     
   const book = await getBook(id);
-  if (!book) return <p>No encontrado</p>;
+  const me = await getCurrentUser();
+  if (!book) {
+    return (
+      <div className="text-center py-16">
+        <div className="text-6xl mb-4">📚</div>
+        <h1 className="text-2xl font-semibold text-gray-900 mb-2">Libro no encontrado</h1>
+        <p className="text-gray-600 mb-6">El libro que buscas no existe o no está disponible.</p>
+        <Link href="/" className="text-blue-600 hover:text-blue-700 font-medium">
+          ← Volver al inicio
+        </Link>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      <Link href="/">← Volver</Link>
-      <div style={{ display: "grid", gridTemplateColumns: "220px 1fr", gap: 16, marginTop: 12 }}>
-        {book.image ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={book.image} alt={book.title} style={{ width: 220, height: 320, objectFit: "cover", borderRadius: 8 }} />
-        ) : (
-          <div style={{ width:220, height:320, border:"1px solid #eee", borderRadius:8, display:"grid", placeItems:"center" }}>Sin portada</div>
-        )}
-        <div>
-          <h2 style={{ margin: "8px 0" }}>{book.title}</h2>
-          <p style={{ color: "#555" }}>{book.authors.join(", ") || "Autor desconocido"}</p>
-          <p style={{ marginTop: 8 }}>
-            <strong>Publicado:</strong> {book.publishedDate} {book.publisher ? `· ${book.publisher}` : ""}
-          </p>
-          {book.pageCount ? <p><strong>Páginas:</strong> {book.pageCount}</p> : null}
-          {book.categories?.length ? <p><strong>Categorías:</strong> {book.categories.join(", ")}</p> : null}
+    <div className="space-y-8">
+      {/* Navigation */}
+      <Link href="/" className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium">
+        ← Volver a la búsqueda
+      </Link>
+
+      {/* Book Details */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+        <div className="grid md:grid-cols-[300px_1fr] gap-8 p-8">
+          {/* Book Cover */}
+          <div className="flex justify-center md:justify-start">
+            {book.image ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img 
+                src={book.image} 
+                alt={book.title} 
+                className="w-60 h-80 object-cover rounded-xl shadow-lg"
+              />
+            ) : (
+              <div className="w-60 h-80 bg-gray-100 rounded-xl flex items-center justify-center text-gray-400 text-4xl">
+                📖
+              </div>
+            )}
+          </div>
+
+          {/* Book Info */}
+          <div className="space-y-6">
+            <div>
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h1 className="text-3xl font-bold text-gray-900 leading-tight mb-2">
+                    {book.title}
+                  </h1>
+                  <p className="text-xl text-gray-600">
+                    {book.authors.join(", ") || "Autor desconocido"}
+                  </p>
+                </div>
+                <FavoriteButtonClient bookId={book.id} loggedIn={!!me} />
+              </div>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-4 text-sm">
+              {book.publishedDate && (
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <span className="font-medium text-gray-700">Publicado:</span>
+                  <p className="text-gray-600">{book.publishedDate}</p>
+                </div>
+              )}
+              {book.publisher && (
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <span className="font-medium text-gray-700">Editorial:</span>
+                  <p className="text-gray-600">{book.publisher}</p>
+                </div>
+              )}
+              {book.pageCount && (
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <span className="font-medium text-gray-700">Páginas:</span>
+                  <p className="text-gray-600">{book.pageCount}</p>
+                </div>
+              )}
+              {book.categories?.length > 0 && (
+                <div className="bg-gray-50 rounded-lg p-3">
+                  <span className="font-medium text-gray-700">Categorías:</span>
+                  <p className="text-gray-600">{book.categories.slice(0, 2).join(", ")}</p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
+
+        {/* Description */}
+        {book.description && (
+          <div className="border-t border-gray-200 p-8">
+            <h3 className="text-xl font-semibold text-gray-900 mb-4">Descripción</h3>
+            <div 
+              className="prose prose-gray max-w-none text-gray-700 leading-relaxed"
+              dangerouslySetInnerHTML={{ __html: book.description }}
+            />
+          </div>
+        )}
       </div>
 
-      <div style={{ marginTop: 16 }}>
-        <h3>Descripción</h3>
-        <div dangerouslySetInnerHTML={{ __html: book.description || "Sin descripción disponible." }} />
-      </div>
-
-      <div style={{ marginTop: 24 }}>
-        <Reviews bookId={book.id} />
-      </div>
+      {/* Reviews Section */}
+      <Reviews bookId={book.id} />
     </div>
   );
 }
@@ -72,5 +142,5 @@ export async function generateMetadata({
 }) {
   const { id } = await params;
   const book = await getBook(id);
-  return { title: book?.title ? `${book.title} | Libro Reviews` : "Libro | Libro Reviews" };
+  return { title: book?.title ? `${book.title} | LibroReseñas` : "Libro | LibroReseñas" };
 }
